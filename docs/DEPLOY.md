@@ -7,10 +7,10 @@
 | families | 家庭 | name, inviteCode, ownerOpenid |
 | members | 微信用户与家庭的关系 | _openid, familyId, joinedAt |
 | dishes | 家庭菜谱 | familyId, name, ingredients, tags |
-| plans | 某天选择的菜单 | familyId, date, dishIds, dishSnapshots |
+| plans | 成员选择与最终菜单 | familyId, date, selections, confirmedDishIds, dishSnapshots |
 | shoppingStates | 某天的采购勾选状态 | familyId, date, checkedNames |
 
-`plans` 保存菜品快照，因此以后修改或删除菜品，不会让历史菜单丢失菜名和食材。
+`plans.selections` 保存每位成员的独立选择，`confirmedDishIds` 和 `dishSnapshots` 保存管理员确认的最终菜单。快照保证以后修改或删除菜品时，历史菜单仍保留菜名和食材。
 
 ## 建议索引
 

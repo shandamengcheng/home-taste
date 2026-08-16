@@ -1,7 +1,7 @@
 <view class="page welcome">
   <view class="brand">🍲</view>
-  <view class="hero-title">今天吃什么，<br/>两个人一起决定</view>
-  <view class="hero-sub">收藏家常菜、选择每日菜单，自动合并成采购清单。</view>
+  <view class="hero-title">今天吃什么，<br/>全家一起决定</view>
+  <view class="hero-sub">最多 5 人共享菜谱、选择每日菜单，自动合并采购清单。</view>
   <view class="card action-card">
     <view class="section-title">创建新家庭</view>
     <input class="input" placeholder="给小家起个名字" maxlength="20" value="{{familyName}}" bindinput="onName" />
@@ -9,7 +9,7 @@
   </view>
   <view class="divider"><text>或者</text></view>
   <view class="card action-card">
-    <view class="section-title">加入另一半的家庭</view>
+    <view class="section-title">加入家人的家庭</view>
     <input class="input code" placeholder="输入 6 位邀请码" maxlength="6" value="{{inviteCode}}" bindinput="onCode" />
     <button class="btn btn-secondary" bindtap="joinFamily" loading="{{loading}}">加入家庭</button>
   </view>

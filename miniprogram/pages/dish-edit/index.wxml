@@ -2,6 +2,8 @@
   <view class="preview" style="background: {{color}}">{{emoji}}</view>
   <text class="label">菜名</text>
   <input class="input" placeholder="例如：番茄炒蛋" maxlength="30" value="{{name}}" bindinput="setName" />
+  <text class="label">主分类</text>
+  <picker mode="selector" range="{{categories}}" value="{{categoryIndex}}" bindchange="setCategory"><view class="input picker">{{category}}<text>›</text></view></picker>
   <text class="label">菜品图标</text>
   <view class="emoji-list"><view class="emoji {{emoji === item ? 'active' : ''}}" wx:for="{{emojis}}" wx:key="*this" bindtap="pickEmoji" data-value="{{item}}">{{item}}</view></view>
   <text class="label">主要食材</text>

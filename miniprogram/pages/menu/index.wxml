@@ -1,16 +1,12 @@
 <view class="page">
-  <view class="hero">
-    <view class="hero-title">家里的味道</view>
-    <view class="hero-sub">{{dishes.length}} 道家常菜，点一下看看主要食材</view>
+  <view class="hero"><view class="hero-title">家常菜谱</view><view class="hero-sub">从推荐中找灵感，也可以记录自家的味道</view></view>
+  <view class="tabs"><view class="tab {{activeTab===item[0]?'active':''}}" wx:for="{{tabs}}" wx:key="0" bindtap="switchTab" data-tab="{{item[0]}}">{{item[1]}}</view></view>
+  <scroll-view class="categories" scroll-x><view class="chips"><view class="chip {{category===item?'active':''}}" wx:for="{{categories}}" wx:key="*this" bindtap="pickCategory" data-value="{{item}}">{{item}}</view></view></scroll-view>
+  <view wx:if="{{!loading && !displayDishes.length}}" class="empty"><view class="empty-icon">🥢</view><view>{{activeTab==='frequent'?'确认几次菜单后，这里会出现常点菜':'这个分类还没有菜品'}}</view></view>
+  <view class="dish card" wx:for="{{displayDishes}}" wx:key="_id" bindtap="editDish" data-id="{{item._id}}" data-source="{{item.sourceType}}">
+    <view class="dish-cover" style="background:{{item.color}}">{{item.emoji}}</view>
+    <view class="dish-body"><view class="row between"><view class="dish-name">{{item.name}}</view><view class="count" wx:if="{{item.selectedCount30d}}">近30天 {{item.selectedCount30d}} 次</view></view><view class="muted ingredients">{{item.ingredientSummary}}</view><view><text class="tag">{{item.category}}</text><text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text></view></view>
+    <button wx:if="{{item.sourceType==='system'}}" class="favorite" catchtap="favorite" data-id="{{item._id}}">＋收藏</button><view wx:else class="arrow">›</view>
   </view>
-  <view wx:if="{{!loading && !dishes.length}}" class="empty"><view class="empty-icon">🥢</view><view>还没有菜品，先添加一道拿手菜吧</view></view>
-  <view class="dish card" wx:for="{{dishes}}" wx:key="_id" bindtap="editDish" data-id="{{item._id}}">
-    <view class="dish-cover" style="background: {{item.color || '#f3d5b5'}}">{{item.emoji || '🍲'}}</view>
-    <view class="dish-body">
-      <view class="row between"><view class="dish-name">{{item.name}}</view><view class="arrow">›</view></view>
-      <view class="muted ingredients">{{item.ingredientSummary || '暂未填写食材'}}</view>
-      <view><text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text></view>
-    </view>
-  </view>
-  <view class="fab" bindtap="addDish">＋</view>
+  <view wx:if="{{activeTab==='family'}}" class="fab" bindtap="addDish">＋</view>
 </view>

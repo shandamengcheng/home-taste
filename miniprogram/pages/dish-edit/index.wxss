@@ -6,3 +6,4 @@
 .ingredient-name { width: 42%; }.ingredient-amount { flex: 1; color: #7b796f; }.remove { font-size: 46rpx; color: #c3c0b7; padding: 0 8rpx; }
 .add { margin-top: 10rpx; }.textarea { width: auto; min-height: 140rpx; }.save { margin-top: 42rpx; }
 .delete { margin-top: 18rpx; color: #bc4832; background: transparent; }
+.picker{display:flex;justify-content:space-between}.picker text{color:#aaa89f}

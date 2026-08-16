@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/welcome/index",
+    "pages/today/index",
     "pages/menu/index",
     "pages/plan/index",
     "pages/shopping/index",
@@ -19,8 +20,8 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
+      { "pagePath": "pages/today/index", "text": "今日" },
       { "pagePath": "pages/menu/index", "text": "菜谱" },
-      { "pagePath": "pages/plan/index", "text": "选菜" },
       { "pagePath": "pages/shopping/index", "text": "采购" },
       { "pagePath": "pages/profile/index", "text": "家庭" }
     ]

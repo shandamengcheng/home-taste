@@ -2,116 +2,62 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
-
 const ok = data => ({ ok: true, data })
 const fail = message => ({ ok: false, message })
 const now = () => db.serverDate()
+const MAX_MEMBERS = 5
+const CATEGORIES = ['荤菜', '素菜', '汤羹', '主食', '快手菜', '儿童菜']
 
-async function member(openid) {
-  const res = await db.collection('members').where({ _openid: openid }).limit(1).get()
-  return res.data[0] || null
-}
-async function familyOf(openid) {
-  const m = await member(openid)
-  if (!m) return { member: null, family: null }
-  const f = await db.collection('families').doc(m.familyId).get().catch(() => null)
-  return { member: m, family: f && f.data }
-}
-function code() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('')
-}
-async function uniqueCode() {
-  for (let i = 0; i < 8; i++) {
-    const inviteCode = code()
-    const r = await db.collection('families').where({ inviteCode }).count()
-    if (!r.total) return inviteCode
-  }
-  throw new Error('邀请码生成失败，请重试')
-}
-function cleanDish(dish) {
-  return {
-    name: String(dish.name || '').trim().slice(0, 30),
-    emoji: String(dish.emoji || '🍲').slice(0, 4),
-    color: /^#[0-9a-f]{6}$/i.test(dish.color || '') ? dish.color : '#f4d6b0',
-    ingredients: Array.isArray(dish.ingredients) ? dish.ingredients.slice(0, 30).map(i => ({ name: String(i.name || '').trim().slice(0, 30), amount: String(i.amount || '').trim().slice(0, 30) })).filter(i => i.name) : [],
-    tags: Array.isArray(dish.tags) ? dish.tags.slice(0, 8).map(t => String(t).trim().slice(0, 12)).filter(Boolean) : [],
-    note: String(dish.note || '').trim().slice(0, 200)
-  }
-}
-async function seedDishes(familyId, openid) {
-  const samples = [
-    { name:'番茄炒蛋',emoji:'🍳',color:'#f4c8c1',ingredients:[{name:'番茄',amount:'2个'},{name:'鸡蛋',amount:'3个'},{name:'小葱',amount:'1根'}],tags:['快手菜','家常'] },
-    { name:'可乐鸡翅',emoji:'🍗',color:'#f4d6b0',ingredients:[{name:'鸡翅中',amount:'10个'},{name:'可乐',amount:'1听'},{name:'生姜',amount:'3片'}],tags:['下饭','肉菜'] },
-    { name:'清炒时蔬',emoji:'🥗',color:'#cfe7d1',ingredients:[{name:'当季青菜',amount:'1把'},{name:'蒜',amount:'3瓣'}],tags:['素菜','清淡'] }
-  ]
-  for (const dish of samples) await db.collection('dishes').add({ data:{...dish,note:'',familyId,createdBy:openid,createdAt:now(),updatedAt:now()} })
-}
+const RECOMMENDED_DISHES = [
+  ['rec_tomato_egg','番茄炒蛋','🍳','#f4c8c1','快手菜',[['番茄','2个'],['鸡蛋','3个'],['小葱','1根']],['下饭','儿童友好']],
+  ['rec_cola_wings','可乐鸡翅','🍗','#f4d6b0','荤菜',[['鸡翅中','10个'],['可乐','1听'],['生姜','3片']],['下饭','家常']],
+  ['rec_garlic_green','蒜蓉青菜','🥗','#cfe7d1','素菜',[['当季青菜','1把'],['蒜','3瓣']],['清淡','快手']],
+  ['rec_braised_pork','红烧肉','🥩','#eec8aa','荤菜',[['五花肉','500克'],['冰糖','20克'],['生姜','4片']],['经典','下饭']],
+  ['rec_fish','清蒸鲈鱼','🐟','#cbe2ed','荤菜',[['鲈鱼','1条'],['生姜','5片'],['小葱','2根']],['清淡','宴客']],
+  ['rec_soup','玉米排骨汤','🍲','#f2e5a9','汤羹',[['排骨','500克'],['玉米','1根'],['胡萝卜','1根']],['营养','清淡']],
+  ['rec_egg_soup','紫菜蛋花汤','🥣','#d9d5ef','汤羹',[['紫菜','1小把'],['鸡蛋','2个'],['小葱','1根']],['快手','清淡']],
+  ['rec_fried_rice','扬州炒饭','🍚','#f4d6b0','主食',[['米饭','2碗'],['鸡蛋','2个'],['火腿','100克'],['青豆','1把']],['快手','一锅出']],
+  ['rec_noodles','葱油拌面','🍜','#f2e5a9','主食',[['面条','2人份'],['小葱','1把'],['生抽','2勺']],['快手','省事']],
+  ['rec_potato_beef','土豆炖牛肉','🥘','#eec8aa','荤菜',[['牛肉','500克'],['土豆','2个'],['胡萝卜','1根']],['下饭','炖菜']],
+  ['rec_tofu','家常豆腐','🫕','#f4c8c1','素菜',[['豆腐','1块'],['青椒','1个'],['木耳','1把']],['下饭','家常']],
+  ['rec_steamed_egg','肉末蒸蛋','🍮','#f2e5a9','儿童菜',[['鸡蛋','3个'],['猪肉末','100克']],['儿童友好','软嫩']]
+].map(([id,name,emoji,color,category,ingredients,tags]) => ({ _id:id,sourceType:'system',name,emoji,color,category,ingredients:ingredients.map(([name,amount])=>({name,amount})),tags,note:'' }))
 
-exports.main = async event => {
-  const { OPENID } = cloud.getWXContext()
-  const action = event.action
-  try {
-    if (action === 'createFamily') {
-      const existing = await member(OPENID)
-      if (existing) return fail('你已经加入了一个家庭')
-      const inviteCode = await uniqueCode()
-      const add = await db.collection('families').add({ data:{ name:String(event.name || '我们的家').trim().slice(0,20), inviteCode, ownerOpenid:OPENID, createdAt:now() } })
-      await db.collection('members').add({ data:{ _openid:OPENID, familyId:add._id, displayName:'', joinedAt:now() } })
-      await seedDishes(add._id, OPENID)
-      return ok({ familyId:add._id, inviteCode })
-    }
-    if (action === 'joinFamily') {
-      if (await member(OPENID)) return fail('你已经加入了一个家庭')
-      const f = await db.collection('families').where({ inviteCode:String(event.inviteCode || '').toUpperCase() }).limit(1).get()
-      if (!f.data.length) return fail('邀请码不存在')
-      const count = await db.collection('members').where({ familyId:f.data[0]._id }).count()
-      if (count.total >= 2) return fail('这个家庭已经有两位成员')
-      await db.collection('members').add({ data:{ _openid:OPENID, familyId:f.data[0]._id, displayName:'', joinedAt:now() } })
-      return ok({ familyId:f.data[0]._id })
-    }
-    const context = await familyOf(OPENID)
-    const family = context.family
-    if (action === 'bootstrap') {
-      if (!family) return ok({ family:null,dishes:[] })
-      const dishes = await db.collection('dishes').where({ familyId:family._id, deleted:_.neq(true) }).orderBy('updatedAt','desc').get()
-      return ok({ family, dishes:dishes.data })
-    }
-    if (action === 'getProfile') {
-      if (!family) return ok({ family:null,members:[],openid:OPENID })
-      const members = await db.collection('members').where({familyId:family._id}).orderBy('joinedAt','asc').get()
-      return ok({family,members:members.data,openid:OPENID})
-    }
-    if (!family) return fail('请先创建或加入家庭')
-    if (action === 'getDish') {
-      const r=await db.collection('dishes').doc(event.id).get(); if(r.data.familyId!==family._id) return fail('无权访问'); return ok(r.data)
-    }
-    if (action === 'saveDish') {
-      const dish=cleanDish(event.dish || {}); if(!dish.name || !dish.ingredients.length) return fail('菜名和食材不能为空')
-      if(event.dish && event.dish._id){const old=await db.collection('dishes').doc(event.dish._id).get();if(old.data.familyId!==family._id)return fail('无权修改');await db.collection('dishes').doc(event.dish._id).update({data:{...dish,updatedAt:now(),deleted:false}});return ok({_id:event.dish._id})}
-      const r=await db.collection('dishes').add({data:{...dish,familyId:family._id,createdBy:OPENID,createdAt:now(),updatedAt:now()}});return ok({_id:r._id})
-    }
-    if (action === 'deleteDish') {
-      const old=await db.collection('dishes').doc(event.id).get();if(old.data.familyId!==family._id)return fail('无权删除');await db.collection('dishes').doc(event.id).update({data:{deleted:true,updatedAt:now()}});return ok({})
-    }
-    if (action === 'getPlan') {
-      const [dishes,plans]=await Promise.all([db.collection('dishes').where({familyId:family._id,deleted:_.neq(true)}).orderBy('updatedAt','desc').get(),db.collection('plans').where({familyId:family._id,date:event.date}).limit(1).get()]);return ok({family,dishes:dishes.data,plan:plans.data[0]||null})
-    }
-    if (action === 'savePlan') {
-      const ids=[...new Set(Array.isArray(event.dishIds)?event.dishIds:[])].slice(0,20); const valid=await db.collection('dishes').where({_id:_.in(ids.length?ids:['__none__']),familyId:family._id,deleted:_.neq(true)}).get();const dishIds=valid.data.map(d=>d._id);const snapshots=valid.data.map(d=>({_id:d._id,name:d.name,emoji:d.emoji,ingredients:d.ingredients}));const existing=await db.collection('plans').where({familyId:family._id,date:event.date}).limit(1).get();const data={dishIds,dishSnapshots:snapshots,updatedBy:OPENID,updatedAt:now()};if(existing.data.length)await db.collection('plans').doc(existing.data[0]._id).update({data});else await db.collection('plans').add({data:{...data,familyId:family._id,date:event.date,createdAt:now()}});return ok({})
-    }
-    if (action === 'getShopping') {
-      const plans=await db.collection('plans').where({familyId:family._id,date:event.date}).limit(1).get();const plan=plans.data[0];if(!plan)return ok({family,dishNames:[],items:[]});const state=await db.collection('shoppingStates').where({familyId:family._id,date:event.date}).limit(1).get();const checked=new Set(state.data.length?state.data[0].checkedNames:[]);const grouped={};(plan.dishSnapshots||[]).forEach(d=>(d.ingredients||[]).forEach(i=>{if(!grouped[i.name])grouped[i.name]=[];grouped[i.name].push(`${i.amount||'适量'}（${d.name}）`)}));const items=Object.keys(grouped).map(name=>({name,detail:grouped[name].join(' + '),checked:checked.has(name)}));return ok({family,dishNames:(plan.dishSnapshots||[]).map(d=>d.name),items})
-    }
-    if (action === 'saveShopping') {
-      const checkedNames=[...new Set(Array.isArray(event.checkedNames)?event.checkedNames.map(String):[])].slice(0,100);const existing=await db.collection('shoppingStates').where({familyId:family._id,date:event.date}).limit(1).get();const data={checkedNames,updatedBy:OPENID,updatedAt:now()};if(existing.data.length)await db.collection('shoppingStates').doc(existing.data[0]._id).update({data});else await db.collection('shoppingStates').add({data:{...data,familyId:family._id,date:event.date}});return ok({})
-    }
-    if (action === 'leaveFamily') {
-      const members=await db.collection('members').where({familyId:family._id}).get();if(family.ownerOpenid===OPENID&&members.data.length>1)return fail('创建者暂不能退出，请先让另一位成员创建新家庭');await db.collection('members').doc(context.member._id).remove();return ok({})
-    }
-    return fail('未知操作')
-  } catch (error) {
-    console.error(action,error)
-    return fail(error.message || '服务暂时不可用')
-  }
-}
+async function member(openid) { const r=await db.collection('members').where({_openid:openid}).limit(1).get();return r.data[0]||null }
+async function familyOf(openid) { const m=await member(openid);if(!m)return{member:null,family:null};const f=await db.collection('families').doc(m.familyId).get().catch(()=>null);return{member:m,family:f&&f.data} }
+function code(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join('')}
+async function uniqueCode(){for(let i=0;i<8;i++){const inviteCode=code();const r=await db.collection('families').where({inviteCode}).count();if(!r.total)return inviteCode}throw new Error('邀请码生成失败，请重试')}
+function cleanDish(d){return{name:String(d.name||'').trim().slice(0,30),emoji:String(d.emoji||'🍲').slice(0,4),color:/^#[0-9a-f]{6}$/i.test(d.color||'')?d.color:'#f4d6b0',category:CATEGORIES.includes(d.category)?d.category:'快手菜',ingredients:Array.isArray(d.ingredients)?d.ingredients.slice(0,30).map(i=>({name:String(i.name||'').trim().slice(0,30),amount:String(i.amount||'').trim().slice(0,30)})).filter(i=>i.name):[],tags:Array.isArray(d.tags)?d.tags.slice(0,8).map(t=>String(t).trim().slice(0,12)).filter(Boolean):[],note:String(d.note||'').trim().slice(0,200)}}
+function rec(id){return RECOMMENDED_DISHES.find(d=>d._id===id)}
+async function familyDishes(familyId){const r=await db.collection('dishes').where({familyId,deleted:_.neq(true)}).orderBy('updatedAt','desc').get();return r.data.map(d=>({...d,sourceType:'family',category:d.category||'快手菜'}))}
+async function resolveDishes(familyId,ids){const unique=[...new Set(Array.isArray(ids)?ids:[])].slice(0,20);const system=unique.map(rec).filter(Boolean);const customIds=unique.filter(id=>!String(id).startsWith('rec_'));let custom=[];if(customIds.length){const r=await db.collection('dishes').where({_id:_.in(customIds),familyId,deleted:_.neq(true)}).get();custom=r.data.map(d=>({...d,sourceType:'family'}))}const map=[...system,...custom].reduce((m,d)=>(m[d._id]=d,m),{});return unique.map(id=>map[id]).filter(Boolean)}
+const snapshots=ds=>ds.map(d=>({_id:d._id,sourceType:d.sourceType||'family',name:d.name,emoji:d.emoji,color:d.color,category:d.category,ingredients:d.ingredients}))
+function normalizePlan(p){if(!p)return null;if(Array.isArray(p.selections))return p;const ids=p.dishIds||[];return{...p,selections:ids.length?[{openid:p.updatedBy||'legacy',displayName:'历史菜单',dishIds:ids}]:[],confirmedDishIds:p.confirmedDishIds||ids}}
+async function getPlan(familyId,date){const r=await db.collection('plans').where({familyId,date}).limit(1).get();return r.data[0]?normalizePlan(r.data[0]):null}
+async function memberName(openid,familyId){const r=await db.collection('members').where({_openid:openid,familyId}).limit(1).get();return(r.data[0]&&r.data[0].displayName)||'家庭成员'}
+async function catalog(familyId){const custom=await familyDishes(familyId);const since=new Date();since.setDate(since.getDate()-30);const r=await db.collection('plans').where({familyId,date:_.gte(since.toISOString().slice(0,10))}).limit(100).get();const stats={};r.data.forEach(raw=>{const p=normalizePlan(raw);(p.confirmedDishIds||[]).forEach(id=>{if(!stats[id])stats[id]={selectedCount30d:0,lastSelectedAt:''};stats[id].selectedCount30d++;if(!stats[id].lastSelectedAt||p.date>stats[id].lastSelectedAt)stats[id].lastSelectedAt=p.date})});const decorate=d=>({...d,...(stats[d._id]||{selectedCount30d:0,lastSelectedAt:''})});return{recommended:RECOMMENDED_DISHES.map(decorate),familyDishes:custom.map(decorate)}}
+
+exports.main=async event=>{const{OPENID}=cloud.getWXContext();const action=event.action;try{
+  if(action==='createFamily'){if(await member(OPENID))return fail('你已经加入了一个家庭');const inviteCode=await uniqueCode();const r=await db.collection('families').add({data:{name:String(event.name||'我们的家').trim().slice(0,20),inviteCode,ownerOpenid:OPENID,maxMembers:MAX_MEMBERS,createdAt:now()}});await db.collection('members').add({data:{_openid:OPENID,familyId:r._id,displayName:'管理员',role:'owner',joinedAt:now()}});return ok({familyId:r._id,inviteCode})}
+  if(action==='joinFamily'){if(await member(OPENID))return fail('你已经加入了一个家庭');const f=await db.collection('families').where({inviteCode:String(event.inviteCode||'').toUpperCase()}).limit(1).get();if(!f.data.length)return fail('邀请码不存在');const count=await db.collection('members').where({familyId:f.data[0]._id}).count();if(count.total>=MAX_MEMBERS)return fail('这个家庭已经有 5 位成员');await db.collection('members').add({data:{_openid:OPENID,familyId:f.data[0]._id,displayName:`家庭成员${count.total+1}`,role:'member',joinedAt:now()}});return ok({familyId:f.data[0]._id})}
+  const ctx=await familyOf(OPENID);const family=ctx.family
+  if(action==='bootstrap'){if(!family)return ok({family:null});return ok({family,plan:await getPlan(family._id,event.date||new Date().toISOString().slice(0,10)),openid:OPENID,isOwner:family.ownerOpenid===OPENID})}
+  if(action==='getProfile'){if(!family)return ok({family:null,members:[],openid:OPENID});const ms=await db.collection('members').where({familyId:family._id}).orderBy('joinedAt','asc').get();return ok({family:{...family,maxMembers:MAX_MEMBERS},members:ms.data,openid:OPENID,isOwner:family.ownerOpenid===OPENID})}
+  if(!family)return fail('请先创建或加入家庭')
+  if(action==='getToday'){const date=event.date||new Date().toISOString().slice(0,10);const plan=await getPlan(family._id,date);const c=await catalog(family._id);const all=[...c.recommended,...c.familyDishes];const map=all.reduce((m,d)=>(m[d._id]=d,m),{});const votes={};((plan&&plan.selections)||[]).forEach(s=>(s.dishIds||[]).forEach(id=>{if(!votes[id])votes[id]={dish:map[id]||((plan.dishSnapshots||[]).find(x=>x._id===id)),count:0,voters:[]};if(votes[id].dish){votes[id].count++;votes[id].voters.push(s.displayName||'家庭成员')}}));const confirmed=((plan&&plan.confirmedDishIds)||[]).map(id=>map[id]||((plan&&plan.dishSnapshots||[]).find(x=>x._id===id))).filter(Boolean);return ok({family,openid:OPENID,isOwner:family.ownerOpenid===OPENID,plan,voteDishes:Object.values(votes).sort((a,b)=>b.count-a.count),confirmedDishes:confirmed,recommendations:all.sort((a,b)=>(b.selectedCount30d||0)-(a.selectedCount30d||0)).slice(0,4)})}
+  if(action==='getCatalog'){return ok({...await catalog(family._id),categories:CATEGORIES})}
+  if(action==='favoriteDish'){const source=rec(event.id);if(!source)return fail('推荐菜不存在');const exists=await db.collection('dishes').where({familyId:family._id,sourceRecommendId:source._id,deleted:_.neq(true)}).limit(1).get();if(exists.data.length)return fail('已经收藏到我家菜谱');const r=await db.collection('dishes').add({data:{...cleanDish(source),familyId:family._id,sourceRecommendId:source._id,createdBy:OPENID,createdAt:now(),updatedAt:now()}});return ok({_id:r._id})}
+  if(action==='getDish'){if(String(event.id).startsWith('rec_'))return ok(rec(event.id));const r=await db.collection('dishes').doc(event.id).get();if(r.data.familyId!==family._id)return fail('无权访问');return ok(r.data)}
+  if(action==='saveDish'){const dish=cleanDish(event.dish||{});if(!dish.name||!dish.ingredients.length)return fail('菜名和食材不能为空');if(event.dish&&event.dish._id){const old=await db.collection('dishes').doc(event.dish._id).get();if(old.data.familyId!==family._id)return fail('无权修改');await db.collection('dishes').doc(event.dish._id).update({data:{...dish,updatedAt:now(),deleted:false}});return ok({_id:event.dish._id})}const r=await db.collection('dishes').add({data:{...dish,familyId:family._id,createdBy:OPENID,createdAt:now(),updatedAt:now()}});return ok({_id:r._id})}
+  if(action==='deleteDish'){const old=await db.collection('dishes').doc(event.id).get();if(old.data.familyId!==family._id)return fail('无权删除');await db.collection('dishes').doc(event.id).update({data:{deleted:true,updatedAt:now()}});return ok({})}
+  if(action==='getPlan'){const c=await catalog(family._id);const plan=await getPlan(family._id,event.date);const mine=((plan&&plan.selections)||[]).find(s=>s.openid===OPENID);return ok({family,dishes:[...c.familyDishes,...c.recommended],plan,myDishIds:(mine&&mine.dishIds)||[]})}
+  if(action==='saveSelection'){const dishes=await resolveDishes(family._id,event.dishIds);const ids=dishes.map(d=>d._id);const existing=await getPlan(family._id,event.date);const selections=(existing&&existing.selections?existing.selections:[]).filter(s=>s.openid!==OPENID);selections.push({openid:OPENID,displayName:await memberName(OPENID,family._id),dishIds:ids,updatedAt:new Date()});const data={selections,updatedBy:OPENID,updatedAt:now()};if(existing)await db.collection('plans').doc(existing._id).update({data});else await db.collection('plans').add({data:{...data,familyId:family._id,date:event.date,confirmedDishIds:[],dishSnapshots:[],createdAt:now()}});return ok({})}
+  if(action==='confirmPlan'){if(family.ownerOpenid!==OPENID)return fail('只有家庭管理员可以确认最终菜单');const dishes=await resolveDishes(family._id,event.dishIds);const ids=dishes.map(d=>d._id);const existing=await getPlan(family._id,event.date);if(!existing)return fail('请先让家庭成员选菜');await db.collection('plans').doc(existing._id).update({data:{confirmedDishIds:ids,dishIds:ids,dishSnapshots:snapshots(dishes),confirmedBy:OPENID,confirmedAt:now(),updatedAt:now()}});return ok({})}
+  if(action==='getShopping'){const plan=await getPlan(family._id,event.date);if(!plan)return ok({family,dishNames:[],items:[]});const state=await db.collection('shoppingStates').where({familyId:family._id,date:event.date}).limit(1).get();const checked=new Set(state.data.length?state.data[0].checkedNames:[]);const grouped={};(plan.dishSnapshots||[]).forEach(d=>(d.ingredients||[]).forEach(i=>{if(!grouped[i.name])grouped[i.name]=[];grouped[i.name].push(`${i.amount||'适量'}（${d.name}）`)}));return ok({family,dishNames:(plan.dishSnapshots||[]).map(d=>d.name),items:Object.keys(grouped).map(name=>({name,detail:grouped[name].join(' + '),checked:checked.has(name)}))})}
+  if(action==='saveShopping'){const checkedNames=[...new Set(Array.isArray(event.checkedNames)?event.checkedNames.map(String):[])].slice(0,100);const e=await db.collection('shoppingStates').where({familyId:family._id,date:event.date}).limit(1).get();const data={checkedNames,updatedBy:OPENID,updatedAt:now()};if(e.data.length)await db.collection('shoppingStates').doc(e.data[0]._id).update({data});else await db.collection('shoppingStates').add({data:{...data,familyId:family._id,date:event.date}});return ok({})}
+  if(action==='refreshInviteCode'){if(family.ownerOpenid!==OPENID)return fail('只有家庭管理员可以刷新邀请码');const inviteCode=await uniqueCode();await db.collection('families').doc(family._id).update({data:{inviteCode}});return ok({inviteCode})}
+  if(action==='removeMember'){if(family.ownerOpenid!==OPENID)return fail('只有家庭管理员可以移除成员');const target=await db.collection('members').doc(event.memberId).get();if(target.data.familyId!==family._id)return fail('成员不存在');if(target.data._openid===OPENID)return fail('不能移除自己');await db.collection('members').doc(event.memberId).remove();return ok({})}
+  if(action==='transferOwner'){if(family.ownerOpenid!==OPENID)return fail('只有家庭管理员可以转让权限');const target=await db.collection('members').doc(event.memberId).get();if(target.data.familyId!==family._id)return fail('成员不存在');await db.collection('families').doc(family._id).update({data:{ownerOpenid:target.data._openid}});await db.collection('members').doc(ctx.member._id).update({data:{role:'member'}});await db.collection('members').doc(event.memberId).update({data:{role:'owner'}});return ok({})}
+  if(action==='leaveFamily'){const ms=await db.collection('members').where({familyId:family._id}).get();if(family.ownerOpenid===OPENID&&ms.data.length>1)return fail('请先转让管理员后再退出');await db.collection('members').doc(ctx.member._id).remove();return ok({})}
+  return fail('未知操作')
+}catch(error){console.error(action,error);return fail(error.message||'服务暂时不可用')}}
