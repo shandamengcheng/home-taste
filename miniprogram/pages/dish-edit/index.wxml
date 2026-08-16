@@ -1,22 +1,30 @@
 <view class="page">
+  <view wx:if="{{!id}}" class="quick-start">
+    <view class="section-title compact">从常用菜开始</view>
+    <view class="muted section-hint">点一下自动填写，最快几秒完成</view>
+    <scroll-view class="template-scroll" scroll-x><view class="template-list"><view class="template-card" wx:for="{{templates}}" wx:key="name" bindtap="applyTemplate" data-index="{{index}}"><view class="template-icon">{{item.emoji}}</view><view class="template-name">{{item.name}}</view><view class="template-category">{{item.category}}</view></view></view></scroll-view>
+  </view>
   <view class="preview" style="background: {{color}}">{{emoji}}</view>
   <text class="label">菜名</text>
   <input class="input" placeholder="例如：番茄炒蛋" maxlength="30" value="{{name}}" bindinput="setName" />
   <text class="label">主分类</text>
-  <picker mode="selector" range="{{categories}}" value="{{categoryIndex}}" bindchange="setCategory"><view class="input picker">{{category}}<text>›</text></view></picker>
+  <view class="choice-list"><view class="choice-chip {{category===item?'active':''}}" wx:for="{{categories}}" wx:key="*this" bindtap="setCategory" data-value="{{item}}">{{item}}</view></view>
   <text class="label">菜品图标</text>
-  <view class="emoji-list"><view class="emoji {{emoji === item ? 'active' : ''}}" wx:for="{{emojis}}" wx:key="*this" bindtap="pickEmoji" data-value="{{item}}">{{item}}</view></view>
+  <view class="emoji-list"><view class="emoji {{emoji===item?'active':''}}" wx:for="{{emojis}}" wx:key="*this" bindtap="pickEmoji" data-value="{{item}}">{{item}}</view></view>
   <text class="label">主要食材</text>
+  <view class="field-hint">常用食材 · 点选自动带入参考用量</view>
+  <view class="quick-ingredients"><view class="ingredient-chip" wx:for="{{quickIngredients}}" wx:key="name" bindtap="addQuickIngredient" data-index="{{index}}">＋ {{item.name}} <text>{{item.amount}}</text></view></view>
   <view class="ingredient card" wx:for="{{ingredients}}" wx:key="index">
     <input class="ingredient-name" placeholder="食材名" value="{{item.name}}" data-index="{{index}}" data-field="name" bindinput="changeIngredient" />
     <input class="ingredient-amount" placeholder="用量，如 2个" value="{{item.amount}}" data-index="{{index}}" data-field="amount" bindinput="changeIngredient" />
     <text class="remove" data-index="{{index}}" bindtap="removeIngredient">×</text>
   </view>
-  <button class="btn btn-secondary add" bindtap="addIngredient">＋ 添加食材</button>
-  <text class="label">标签（用逗号分隔）</text>
-  <input class="input" placeholder="快手菜, 下饭" value="{{tagsText}}" bindinput="setTags" />
-  <text class="label">备注</text>
-  <textarea class="input textarea" placeholder="口味、做法或注意事项" maxlength="200" value="{{note}}" bindinput="setNote" />
+  <button class="btn btn-secondary add" bindtap="addIngredient">＋ 添加其他食材</button>
+  <text class="label">标签</text>
+  <view class="choice-list"><view class="choice-chip tag-choice {{selectedTagMap[item]?'active':''}}" wx:for="{{commonTags}}" wx:key="*this" bindtap="toggleTag" data-value="{{item}}">{{selectedTagMap[item]?'✓ ':''}}{{item}}</view></view>
+  <input class="input optional-input" placeholder="其他标签（可选，用逗号分隔）" value="{{customTagsText}}" bindinput="setCustomTags" />
+  <text class="label">备注 <text class="optional">选填</text></text>
+  <textarea class="input textarea" placeholder="如：少盐、不要辣" maxlength="200" value="{{note}}" bindinput="setNote" />
   <button class="btn btn-primary save" bindtap="save" loading="{{saving}}">保存菜品</button>
   <button wx:if="{{id}}" class="btn delete" bindtap="remove">删除菜品</button>
 </view>
