@@ -1,5 +1,5 @@
 <view class="page">
-  <view class="hero"><view class="hero-title">{{friendlyDate}}</view><view class="hero-sub">选出你想吃的菜，家人会在今日菜单中看到</view></view>
+  <view class="hero"><view class="hero-title">{{friendlyDate}}</view><view class="hero-sub">保存后会自动汇总到今日菜单与采购清单</view></view>
   <picker mode="date" value="{{date}}" bindchange="changeDate"><view class="date-picker">📅 选择其他日期 <text>›</text></view></picker>
   <view wx:if="{{!dishes.length}}" class="empty"><view class="empty-icon">🍽️</view><view>先去菜谱添加几道菜吧</view></view>
   <view class="choice card {{selectedMap[item._id] ? 'selected' : ''}}" wx:for="{{dishes}}" wx:key="_id" bindtap="toggle" data-id="{{item._id}}">
@@ -7,5 +7,5 @@
     <view class="choice-body"><view class="choice-name">{{item.name}}</view><view class="muted">{{item.ingredientSummary}}</view></view>
     <view class="check">{{selectedMap[item._id] ? '✓' : ''}}</view>
   </view>
-  <view class="bottom-bar"><view><text class="count">{{selectedIds.length}}</text> 道菜</view><button class="btn btn-primary save" bindtap="save" loading="{{saving}}">保存我的选择</button></view>
+  <view class="bottom-bar"><view><text class="count">{{selectedIds.length}}</text> 道菜</view><button class="btn btn-primary save" bindtap="save" loading="{{saving}}">保存并同步菜单</button></view>
 </view>

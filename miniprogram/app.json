@@ -20,10 +20,10 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/today/index", "text": "今日" },
-      { "pagePath": "pages/menu/index", "text": "菜谱" },
-      { "pagePath": "pages/shopping/index", "text": "采购" },
-      { "pagePath": "pages/profile/index", "text": "家庭" }
+      { "pagePath": "pages/today/index", "text": "今日", "iconPath": "assets/tab/today.png", "selectedIconPath": "assets/tab/today-active.png" },
+      { "pagePath": "pages/menu/index", "text": "菜谱", "iconPath": "assets/tab/menu.png", "selectedIconPath": "assets/tab/menu-active.png" },
+      { "pagePath": "pages/shopping/index", "text": "采购", "iconPath": "assets/tab/shopping.png", "selectedIconPath": "assets/tab/shopping-active.png" },
+      { "pagePath": "pages/profile/index", "text": "家庭", "iconPath": "assets/tab/family.png", "selectedIconPath": "assets/tab/family-active.png" }
     ]
   },
   "sitemapLocation": "sitemap.json",

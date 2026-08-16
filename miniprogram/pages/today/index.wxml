@@ -1,17 +1,15 @@
 <view class="page">
-  <view class="hero"><view class="eyebrow">{{family.name}}</view><view class="hero-title">{{friendlyDate}}</view><view class="hero-sub">看看家人想吃什么，一起确认今天的菜单</view></view>
+  <view class="hero"><view class="eyebrow">{{family.name}}</view><view class="hero-title">{{friendlyDate}}</view><view class="hero-sub">家人的选择会自动汇总为今日菜单</view></view>
   <picker mode="date" value="{{date}}" bindchange="changeDate"><view class="date-picker">📅 {{friendlyDate}}<text>切换</text></view></picker>
-  <view wx:if="{{confirmedDishes.length}}">
-    <view class="row between"><view class="section-title">今日最终菜单</view><view class="status">已确认</view></view>
-    <view class="confirmed card" wx:for="{{confirmedDishes}}" wx:key="_id"><view class="cover" style="background:{{item.color}}">{{item.emoji}}</view><view><view class="dish-name">{{item.name}}</view><view class="muted">{{item.category}}</view></view></view>
-    <button class="btn btn-secondary" bindtap="goShopping">查看采购清单</button>
+
+  <view class="section-head"><view><view class="section-title compact">今日菜单</view><view wx:if="{{voteDishes.length}}" class="muted auto-hint">已自动同步 · 共 {{voteDishes.length}} 道菜</view></view><view wx:if="{{voteDishes.length}}" class="auto-status">自动汇总</view></view>
+  <view wx:if="{{!voteDishes.length}}" class="empty card"><view class="empty-icon">🍽️</view><view>今天还没有人点菜</view><view class="muted empty-hint">选好后会直接成为今日菜单</view><button class="btn btn-primary mini-btn" bindtap="goSelect">我来点菜</button></view>
+  <view class="menu-dish card" wx:for="{{voteDishes}}" wx:key="index">
+    <view class="cover" style="background:{{item.dish.color}}">{{item.dish.emoji}}</view>
+    <view class="dish-main"><view class="dish-name">{{item.dish.name}}</view><view class="muted voter">{{item.voterSummary}} 想吃</view></view>
+    <view class="votes">{{item.count}}票</view>
   </view>
-  <view class="section-title">家人想吃</view>
-  <view wx:if="{{!voteDishes.length}}" class="empty card"><view class="empty-icon">🍽️</view><view>今天还没有人点菜</view><button class="btn btn-primary mini-btn" bindtap="goSelect">我来点菜</button></view>
-  <view class="vote card {{confirmMap[item.dish._id] ? 'picked' : ''}}" wx:for="{{voteDishes}}" wx:key="index" bindtap="toggleConfirm" data-id="{{item.dish._id}}">
-    <view class="cover" style="background:{{item.dish.color}}">{{item.dish.emoji}}</view><view class="vote-main"><view class="dish-name">{{item.dish.name}}</view><view class="muted">{{item.voterSummary}}想吃</view></view><view class="votes">{{item.count}}票</view>
-  </view>
-  <button wx:if="{{voteDishes.length}}" class="btn btn-primary" bindtap="goSelect">修改我的选择</button>
-  <button wx:if="{{isOwner && voteDishes.length}}" class="btn btn-secondary confirm-btn" bindtap="confirm" loading="{{confirming}}">确认最终菜单（{{confirmIds.length}}）</button>
-  <view wx:if="{{!voteDishes.length && recommendations.length}}"><view class="section-title">可以试试</view><view class="recommend-row"><view class="recommend" wx:for="{{recommendations}}" wx:key="_id"><view class="recommend-cover" style="background:{{item.color}}">{{item.emoji}}</view><view>{{item.name}}</view></view></view></view>
+  <view wx:if="{{voteDishes.length}}" class="actions"><button class="btn btn-primary" bindtap="goSelect">修改我的选择</button><button class="btn btn-secondary" bindtap="goShopping">查看采购清单</button></view>
+
+  <view wx:if="{{!voteDishes.length && recommendations.length}}"><view class="section-title">可以试试</view><scroll-view class="recommend-scroll" scroll-x><view class="recommend-row"><view class="recommend" wx:for="{{recommendations}}" wx:key="_id"><view class="recommend-cover" style="background:{{item.color}}">{{item.emoji}}</view><view>{{item.name}}</view></view></view></scroll-view></view>
 </view>

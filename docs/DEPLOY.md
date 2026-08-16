@@ -10,7 +10,7 @@
 | plans | 成员选择与最终菜单 | familyId, date, selections, confirmedDishIds, dishSnapshots |
 | shoppingStates | 某天的采购勾选状态 | familyId, date, checkedNames |
 
-`plans.selections` 保存每位成员的独立选择，`confirmedDishIds` 和 `dishSnapshots` 保存管理员确认的最终菜单。快照保证以后修改或删除菜品时，历史菜单仍保留菜名和食材。
+`plans.selections` 保存每位成员的独立选择，`confirmedDishIds` 和 `dishSnapshots` 保存所有成员当前选择的自动汇总结果。快照保证以后修改或删除菜品时，历史菜单仍保留菜名和食材。
 
 ## 建议索引
 
