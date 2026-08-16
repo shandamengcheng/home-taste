@@ -1,0 +1,6 @@
+.dish { display: flex; padding: 20rpx; }
+.dish-cover { width: 150rpx; height: 150rpx; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; font-size: 72rpx; flex: none; }
+.dish-body { padding: 8rpx 0 0 24rpx; flex: 1; min-width: 0; }
+.dish-name { font-size: 34rpx; font-weight: 800; }
+.arrow { color: #bbb9af; font-size: 46rpx; }
+.ingredients { margin: 16rpx 0 10rpx; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

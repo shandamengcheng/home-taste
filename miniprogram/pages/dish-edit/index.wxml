@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="preview" style="background: {{color}}">{{emoji}}</view>
+  <text class="label">菜名</text>
+  <input class="input" placeholder="例如：番茄炒蛋" maxlength="30" value="{{name}}" bindinput="setName" />
+  <text class="label">菜品图标</text>
+  <view class="emoji-list"><view class="emoji {{emoji === item ? 'active' : ''}}" wx:for="{{emojis}}" wx:key="*this" bindtap="pickEmoji" data-value="{{item}}">{{item}}</view></view>
+  <text class="label">主要食材</text>
+  <view class="ingredient card" wx:for="{{ingredients}}" wx:key="index">
+    <input class="ingredient-name" placeholder="食材名" value="{{item.name}}" data-index="{{index}}" data-field="name" bindinput="changeIngredient" />
+    <input class="ingredient-amount" placeholder="用量，如 2个" value="{{item.amount}}" data-index="{{index}}" data-field="amount" bindinput="changeIngredient" />
+    <text class="remove" data-index="{{index}}" bindtap="removeIngredient">×</text>
+  </view>
+  <button class="btn btn-secondary add" bindtap="addIngredient">＋ 添加食材</button>
+  <text class="label">标签（用逗号分隔）</text>
+  <input class="input" placeholder="快手菜, 下饭" value="{{tagsText}}" bindinput="setTags" />
+  <text class="label">备注</text>
+  <textarea class="input textarea" placeholder="口味、做法或注意事项" maxlength="200" value="{{note}}" bindinput="setNote" />
+  <button class="btn btn-primary save" bindtap="save" loading="{{saving}}">保存菜品</button>
+  <button wx:if="{{id}}" class="btn delete" bindtap="remove">删除菜品</button>
+</view>

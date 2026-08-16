@@ -1,0 +1,8 @@
+.preview { width: 180rpx; height: 180rpx; margin: 10rpx auto 30rpx; border-radius: 48rpx; display: flex; align-items: center; justify-content: center; font-size: 92rpx; }
+.emoji-list { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.emoji { width: 82rpx; height: 82rpx; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 20rpx; font-size: 42rpx; }
+.emoji.active { outline: 5rpx solid #e05d3f; }
+.ingredient { display: flex; align-items: center; padding: 18rpx 22rpx; }
+.ingredient-name { width: 42%; }.ingredient-amount { flex: 1; color: #7b796f; }.remove { font-size: 46rpx; color: #c3c0b7; padding: 0 8rpx; }
+.add { margin-top: 10rpx; }.textarea { width: auto; min-height: 140rpx; }.save { margin-top: 42rpx; }
+.delete { margin-top: 18rpx; color: #bc4832; background: transparent; }

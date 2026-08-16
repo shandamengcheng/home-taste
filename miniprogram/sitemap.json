@@ -1,0 +1,1 @@
+{ "desc": "家常菜单", "rules": [{ "action": "disallow", "page": "*" }] }

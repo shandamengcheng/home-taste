@@ -1,0 +1,31 @@
+{
+  "pages": [
+    "pages/welcome/index",
+    "pages/menu/index",
+    "pages/plan/index",
+    "pages/shopping/index",
+    "pages/profile/index",
+    "pages/dish-edit/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "今天吃什么",
+    "navigationBarBackgroundColor": "#fffaf2",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f5ef"
+  },
+  "tabBar": {
+    "color": "#8b8b83",
+    "selectedColor": "#e05d3f",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/menu/index", "text": "菜谱" },
+      { "pagePath": "pages/plan/index", "text": "选菜" },
+      { "pagePath": "pages/shopping/index", "text": "采购" },
+      { "pagePath": "pages/profile/index", "text": "家庭" }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

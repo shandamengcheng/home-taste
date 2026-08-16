@@ -1,0 +1,7 @@
+.welcome { padding-top: 80rpx; }
+.brand { font-size: 108rpx; margin-bottom: 36rpx; }
+.action-card { margin-top: 34rpx; }
+.action-card .section-title { margin-top: 0; }
+.action-card .btn { margin-top: 24rpx; }
+.divider { text-align: center; color: #aaa89f; margin: 12rpx 0; }
+.code { letter-spacing: 14rpx; text-transform: uppercase; }

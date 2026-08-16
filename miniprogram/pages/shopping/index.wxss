@@ -1,0 +1,3 @@
+.date-picker { background:#edeae2; border-radius:18rpx; padding:22rpx 26rpx; margin-bottom:24rpx; display:flex; justify-content:space-between; }.date-picker text {color:#e05d3f;}
+.progress .track {height:14rpx;background:#eeeae2;border-radius:10rpx;margin-top:20rpx;overflow:hidden}.bar{height:100%;background:#72a878;border-radius:10rpx;}
+.shopping {display:flex;align-items:center}.checkbox{width:52rpx;height:52rpx;border:3rpx solid #cfccc2;border-radius:14rpx;text-align:center;line-height:52rpx;color:#fff;flex:none}.item-body{padding-left:22rpx}.item-name{font-size:32rpx;font-weight:700;margin-bottom:8rpx}.done .checkbox{background:#72a878;border-color:#72a878}.done .item-name{text-decoration:line-through;color:#aaa89f}.clear{margin-top:30rpx}

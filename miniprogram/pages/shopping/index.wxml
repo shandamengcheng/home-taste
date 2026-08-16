@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="hero"><view class="hero-title">采购清单</view><view class="hero-sub">来自 {{friendlyDate}} 的菜单 · {{dishNames || '还未选菜'}}</view></view>
+  <picker mode="date" value="{{date}}" bindchange="changeDate"><view class="date-picker">📅 {{friendlyDate}} <text>切换</text></view></picker>
+  <view class="progress card" wx:if="{{items.length}}"><view class="row between"><text>采购进度</text><text>{{checkedCount}} / {{items.length}}</text></view><view class="track"><view class="bar" style="width: {{progress}}%"></view></view></view>
+  <view wx:if="{{!items.length}}" class="empty"><view class="empty-icon">🛒</view><view>这一天还没有需要采购的食材</view></view>
+  <view class="shopping card {{item.checked ? 'done' : ''}}" wx:for="{{items}}" wx:key="name" bindtap="toggle" data-index="{{index}}">
+    <view class="checkbox">{{item.checked ? '✓' : ''}}</view>
+    <view class="item-body"><view class="item-name">{{item.name}}</view><view class="muted">{{item.detail}}</view></view>
+  </view>
+  <button wx:if="{{checkedCount}}" class="btn btn-ghost clear" bindtap="clearChecked">全部标记为未买</button>
+</view>
