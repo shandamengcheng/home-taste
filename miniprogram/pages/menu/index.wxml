@@ -3,7 +3,7 @@
   <view class="tabs"><view class="tab {{activeTab===item[0]?'active':''}}" wx:for="{{tabs}}" wx:key="0" bindtap="switchTab" data-tab="{{item[0]}}">{{item[1]}}</view></view>
   <scroll-view class="categories" scroll-x><view class="chips"><view class="chip {{category===item?'active':''}}" wx:for="{{categories}}" wx:key="*this" bindtap="pickCategory" data-value="{{item}}">{{item}}</view></view></scroll-view>
   <view wx:if="{{!loading && !displayDishes.length}}" class="empty"><view class="empty-icon">🥢</view><view>{{activeTab==='frequent'?'确认几次菜单后，这里会出现常点菜':'这个分类还没有菜品'}}</view></view>
-  <view class="dish card" wx:for="{{displayDishes}}" wx:key="_id" bindtap="editDish" data-id="{{item._id}}" data-source="{{item.sourceType}}">
+  <view class="dish card" wx:for="{{displayDishes}}" wx:key="_id" bindtap="viewDish" data-id="{{item._id}}" data-source="{{item.sourceType}}">
     <view class="dish-cover" style="background:{{item.color}}">{{item.emoji}}</view>
     <view class="dish-body">
       <view class="dish-head">
@@ -14,9 +14,9 @@
       <view class="muted ingredients">{{item.ingredientSummary || '暂未填写食材'}}</view>
       <view class="dish-footer">
         <view class="tag-list"><text class="tag category-tag">{{item.category}}</text><text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text></view>
-        <button wx:if="{{item.sourceType==='system'}}" class="favorite" catchtap="favorite" data-id="{{item._id}}">＋ 收藏</button>
-        <view wx:else class="edit-entry">编辑 <text>›</text></view>
+        <view wx:if="{{item.sourceType!=='system'}}" class="edit-entry">编辑 <text>›</text></view>
       </view>
+      <view wx:if="{{item.sourceType==='system'}}" class="recipe-actions"><button class="detail-entry" catchtap="viewDish" data-id="{{item._id}}" data-source="{{item.sourceType}}">查看做法 <text>›</text></button><button class="favorite" catchtap="favorite" data-id="{{item._id}}">♡ 收藏</button></view>
     </view>
   </view>
   <view wx:if="{{activeTab==='family'}}" class="fab" bindtap="addDish">＋</view>

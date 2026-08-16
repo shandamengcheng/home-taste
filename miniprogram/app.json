@@ -6,6 +6,7 @@
     "pages/plan/index",
     "pages/shopping/index",
     "pages/profile/index",
+    "pages/dish-detail/index",
     "pages/dish-edit/index"
   ],
   "window": {

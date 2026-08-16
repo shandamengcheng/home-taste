@@ -7,6 +7,7 @@ Page({
   pickCategory(e){this.setData({category:e.currentTarget.dataset.value});this.filter()},
   filter(){const list=this.data.activeTab==='recommended'?this.data.recommended:this.data.activeTab==='family'?this.data.familyDishes:this.data.frequent;this.setData({displayDishes:this.data.category==='全部'?list:list.filter(d=>d.category===this.data.category)})},
   addDish(){wx.navigateTo({url:'/pages/dish-edit/index'})},
+  viewDish(e){const {id,source}=e.currentTarget.dataset;if(source==='system')wx.navigateTo({url:`/pages/dish-detail/index?id=${id}`});else this.editDish(e)},
   editDish(e){const {id,source}=e.currentTarget.dataset;if(source==='system')return;wx.navigateTo({url:`/pages/dish-edit/index?id=${id}`})},
   async favorite(e){e.stopPropagation&&e.stopPropagation();try{await call('favoriteDish',{id:e.currentTarget.dataset.id});wx.showToast({title:'已收藏到我家'});this.load()}catch(_){} }
 })

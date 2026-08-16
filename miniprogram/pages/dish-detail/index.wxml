@@ -1,0 +1,7 @@
+<view wx:if="{{dish}}" class="page">
+  <view class="recipe-hero" style="background:{{dish.color}}"><view class="recipe-emoji">{{dish.emoji}}</view><view class="recipe-copy"><view class="recipe-name">{{dish.name}}</view><view class="recipe-meta">{{dish.category}} · {{dish.cookTime||'约 20 分钟'}}</view></view></view>
+  <view class="card"><view class="section-title compact">主要食材</view><view class="ingredient-summary">{{ingredientSummary}}</view><view class="ingredient-row" wx:for="{{dish.ingredients}}" wx:key="name"><text>{{item.name}}</text><text>{{item.amount||'适量'}}</text></view></view>
+  <view class="card"><view class="section-title compact">制作步骤</view><view class="step" wx:for="{{dish.steps}}" wx:key="index"><view class="step-index">{{index+1}}</view><view>{{item}}</view></view><view wx:if="{{!dish.steps.length}}" class="muted">这道自家菜还没有填写制作步骤。</view></view>
+  <view wx:if="{{dish.note}}" class="card note"><view class="section-title compact">小贴士</view><view>{{dish.note}}</view></view>
+  <view class="bottom-bar"><button wx:if="{{dish.sourceType==='system'}}" class="btn btn-secondary" bindtap="favorite">收藏到我家</button><button class="btn btn-primary" bindtap="goSelect">去点这道菜</button></view>
+</view>
